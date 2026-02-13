@@ -2,88 +2,47 @@ pipeline {
     agent any
 
     environment {
-        PROMETHEUS_VERSION = '2.35.0'
-        GRAFANA_VERSION = '8.3.5'
-        SONARQUBE_VERSION = 'latest'
-        SUDO_PASSWORD = credentials('sudo-password')
-        PATH = "/usr/local/bin:$PATH"
+        SSH_CREDS = credentials('vm-ssh-credentials')
+        VM_IP = '192.168.56.101'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/gabrielviegas/DevOps-InfraManager.git'
+                git branch: 'main', url: 'https://github.com/gabrielviegas/devops-observability-stack.git'
             }
         }
 
-        stage('Instalação do VirtualBox') {
+        stage('Provision VM') {
             steps {
-                sh 'sudo apt update && sudo apt install -y virtualbox'
-            }
-        }
-
-        stage('Criação da VM') {
-            steps {
-                dir('/home/viegas/devops/DevOps-InfraManager/ansible/playbooks') {
-                    sh 'ansible-playbook create_vm_yml'
+                dir('ansible/playbooks') {
+                    sh 'ansible-playbook create_vm.yml'
                 }
             }
         }
 
-        stage('Configuração do Prometheus') {
+        stage('Configure Docker') {
             steps {
-                sh '''
-                wget https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
-                tar -xzf prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
-                cd prometheus-${PROMETHEUS_VERSION}.linux-amd64/
-                ./prometheus --config.file=prometheus.yml &
-                '''
+                dir('ansible/playbooks') {
+                    sh "ansible-playbook -i ${VM_IP}, -u ubuntu --private-key $SSH_CREDS_KEY install_docker.yml"
+                }
             }
         }
 
-        stage('Configuração do Grafana') {
+        stage('Deploy Stack') {
             steps {
-                sh '''
-                wget https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz
-                tar -zxvf grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz
-                cd grafana-${GRAFANA_VERSION}/bin/
-                ./grafana-server &
-                sleep 10
-                '''
+                sshagent(['vm-ssh-credentials']) {
+                    sh "scp -o StrictHostKeyChecking=no docker-compose-stack.yml prometheus/prometheus.yml ubuntu@${VM_IP}:~/"
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@${VM_IP} 'docker compose -f docker-compose-stack.yml up -d'"
+                }
             }
         }
 
-        stage('Instalação do Docker') {
+        stage('Health Check') {
             steps {
-                sh '''
-                sudo apt-get update
-                    sudo apt-get install -y ca-certificates curl
-                    sudo install -m 0755 -d /etc/apt/keyrings
-                    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                    sudo chmod a+r /etc/apt/keyrings/docker.asc
-                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-                    sudo apt-get update
-                    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-                '''
+                sleep 20
+                sh "curl -I http://${VM_IP}:3000"
             }
-        }
-
-        stage('Validação da instalação do Docker') {
-            steps {
-                sh 'docker --version'
-            }
-        }
-
-        stage('Instalação do SonarQube via Docker') {
-            steps {
-                sh 'sudo docker-compose -f /home/viegas/devops/DevOps-InfraManager/sonarqube/docker-compose.yml up -d'
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Finalizando pipeline'
         }
     }
 }
