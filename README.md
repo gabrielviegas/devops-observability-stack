@@ -32,7 +32,7 @@ Service Stack
 
 ![Architecture](images/architecture.png)
 
-## 🚀 Getting Started
+## Getting Started
 
 Prerequisites:
 
@@ -61,7 +61,7 @@ Once the pipeline finishes, you can access the services via the VM IP:
 | **Prometheus** | 9090 | N/A |
 | **SonarQube** | 9000 | admin / admin |
 
-## 📊 Features & Automation Highlights
+## Features & Automation Highlights
 
 - Idempotency: Ansible playbooks ensure the state of the VM is always consistent.
 
@@ -71,5 +71,5 @@ Once the pipeline finishes, you can access the services via the VM IP:
 
 - Isolation: All services run in a dedicated Docker network (infra-net).
 
-## 📄 License
+## License
 Distributed under the MIT License. See LICENSE for more information.
