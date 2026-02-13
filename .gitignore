@@ -1,12 +1,23 @@
-# Arquivos gerados durante o build
-*.ova            # Arquivos de exportação de VMs
-*.vdi            # Arquivos de disco VirtualBox
-packer_cache/
+# virtualBox and vagrant
+*.ova
+*.vdi
+*.vbox
+.vagrant/
 
-# Arquivos de configuração com credenciais e chaves
-*.env            # Arquivos de variáveis de ambiente
+# ansible
+*.retry
 
-# Arquivos de logs e temporários
+# logs and temp
 *.log
 logs/
 tmp/
+
+# credentials and environment variables
+*.env
+.env
+secret.tfvars
+
+# IDEs
+.idea/
+.vscode/
+.DS_Store
