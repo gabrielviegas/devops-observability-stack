@@ -1,0 +1,60 @@
+{
+    "dashboard": {
+      "id": null,
+      "title": "Monitoramento da Aplicação",
+      "panels": [
+        {
+          "title": "Uso de CPU",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ],
+          "yaxes": [
+            {
+              "format": "percent"
+            },
+            {
+              "format": "short"
+            }
+          ],
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "title": "Uso de Memória",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "node_memory_Active_bytes / node_memory_MemTotal_bytes * 100",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ],
+          "yaxes": [
+            {
+              "format": "percent"
+            },
+            {
+              "format": "short"
+            }
+          ],
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 9
+          }
+        }
+      ]
+    },
+    "folderId": null,
+    "overwrite": false
+  }
