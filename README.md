@@ -1,43 +1,75 @@
-# DevOps Infrastructure Management Project
+# DevOps Observability Stack
 
 ## Overview
-This project aims to automate infrastructure management using DevOps principles and tools. It includes provisioning virtual machines (VMs), configuring monitoring with Prometheus and Grafana, deploying applications with Docker, and managing code quality with SonarQube.
+DevOps Observability Stack is a fully automated monitoring and code quality platform. It leverages Infrastructure as Code (IaC) principles to provision a virtual environment and deploy a resilient stack containing Prometheus, Grafana, and SonarQube using Docker Compose.
 
-## Conception
-The idea stemmed from the need to streamline infrastructure setup and application deployment using automated processes. By leveraging DevOps practices, we aim to enhance reliability, scalability, and maintainability of our systems.
+The goal is to provide a "push-button" solution for spinning up a complete observability lab, ensuring consistency across environments through automation.
+
 
 ## Architecture
-The architecture involves:
-- **Virtual Machine Provisioning:** Utilizing Ansible for automating VM creation on VirtualBox.
-- **Monitoring Setup:** Prometheus for metrics collection and Grafana for visualization.
-- **Containerized Deployments:** Docker and Docker Compose for deploying and managing applications.
-- **Code Quality Assurance:** SonarQube for continuous inspection of code quality.
 
-![Architecture](https://github.com/user-attachments/assets/a83eccc0-efba-494b-b85a-d49a57c4b6b6)
+The project follows a strict separation of concerns:
 
+- Provisioning: Ansible creates the Virtual Machine (VirtualBox).
 
-## Implementation
-### Tools and Technologies
-- **Virtualization:** VirtualBox
-- **Automation:** Ansible for provisioning VMs
-- **Monitoring:** Prometheus and Grafana
-- **Containerization:** Docker for application deployment
-- **Continuous Integration/Continuous Deployment (CI/CD):** Jenkins for pipeline automation
+- Configuration: Ansible configures the OS and installs the Docker Engine.
 
-### Pipeline Workflow
-1. **Checkout:** Fetching the latest code from the repository.
-2. **VirtualBox Setup:** Installing VirtualBox for VM management.
-3. **VM Creation:** Ansible playbook execution for VM creation.
-4. **Prometheus Configuration:** Setting up Prometheus for metrics collection.
-5. **Grafana Setup:** Configuring Grafana for monitoring dashboard.
-6. **Docker Installation:** Installing Docker for containerized deployments.
-7. **SonarQube Deployment:** Deploying SonarQube for code quality assessment.
+- Orchestration: Jenkins pipelines orchestrate the flow.
 
-## Future Enhancements
-Future plans include expanding container orchestration with Kubernetes and enhancing CI/CD capabilities with more automated testing and deployment strategies.
+- Application: Docker Compose manages the services (Monitor & Quality) inside the VM.
 
-## Contributing
-Contributions are welcome! Feel free to fork this repository, submit issues, or propose enhancements through pull requests.
+Service Stack
 
-## License
-This project is licensed under the [MIT License](LICENSE).
+- Prometheus: Metrics collection and storage.
+
+- Node Exporter: Hardware and OS metrics exposure.
+
+- Grafana: Visualization with automated dashboard provisioning.
+
+- SonarQube: Continuous Code Quality inspection.
+
+- PostgreSQL: Database backend for SonarQube.
+
+![Architecture](images/architecture.png)
+
+## 🚀 Getting Started
+
+Prerequisites:
+
+- Jenkins installed and running.
+
+- VirtualBox installed on the host machine.
+
+- Ansible installed.
+
+Installation & Deployment
+This project is designed to run via the Jenkins Pipeline, but the logic can be broken down:
+
+1. **Infrastructure Provisioning:** The pipeline triggers ansible-playbook create_vm.yml to spin up a fresh Ubuntu VM.
+2. **IConfiguration Management:** The pipeline triggers ansible-playbook install_docker.yml to prepare the VM with Docker Engine and Compose plugin.
+
+3. **IStack Deployment:** The pipeline transfers the docker-compose-stack.yml and monitoring/ configs to the VM and executes:
+```bash
+docker compose -f docker-compose-stack.yml up -d
+```
+Accessing the Services
+Once the pipeline finishes, you can access the services via the VM IP:
+
+| Service | Port | Default Creds |
+| :--- | :--- | :--- |
+| **Grafana** | 3000 | admin / admin |
+| **Prometheus** | 9090 | N/A |
+| **SonarQube** | 9000 | admin / admin |
+
+## 📊 Features & Automation Highlights
+
+- Idempotency: Ansible playbooks ensure the state of the VM is always consistent.
+
+- Grafana Provisioning: Dashboards and Datasources are injected via code (monitoring/grafana/provisioning). No manual import is required.
+
+- Persistent Data: Docker volumes ensure SonarQube and Prometheus data survive container restarts.
+
+- Isolation: All services run in a dedicated Docker network (infra-net).
+
+## 📄 License
+Distributed under the MIT License. See LICENSE for more information.
