@@ -1,7 +1,0 @@
-Jenkinsfile linguist-language=Groovy
-*.json linguist-detectable=true
-*.yml linguist-detectable=true
-*.yaml linguist-detectable=true
-*.dockerfile linguist-detectable=true
-*.md linguist-documentation
-
